@@ -1,7 +1,6 @@
 package net.tcpshield.tcpshieldapi.impl;
 
 import net.tcpshield.tcpshieldapi.BackendSet;
-import net.tcpshield.tcpshieldapi.Network;
 import net.tcpshield.tcpshieldapi.response.BackendSetResponse;
 
 import java.util.*;

@@ -8,14 +8,16 @@ import net.tcpshield.tcpshieldapi.exception.APIConnectionException;
 import net.tcpshield.tcpshieldapi.exception.status.NoPermissionException;
 import net.tcpshield.tcpshieldapi.exception.status.NotFoundException;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class RestClient {
 
@@ -66,44 +68,30 @@ public class RestClient {
 
     private <T> RestResponse<T> internalRequest(RestRequest<T> request) throws IOException {
         String data = toJson(request.getData());
-
-        URL url = new URL(request.getURL());
-
-        HttpsURLConnection connection = null;
+        HttpClient client = HttpClient.newBuilder().build();
         try {
-            connection = (HttpsURLConnection) url.openConnection();
-
-            connection.setRequestMethod(request.getRequestType().name());
-
-            connection.setRequestProperty("X-API-Key", apiKey);
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Content-Length", data == null ? "0" : String.valueOf(data.length()));
-            connection.setRequestProperty("Content-Language", "en-US");
-
-            connection.setDoInput(true);
-            connection.setDoOutput(true);
-
-            connection.connect();
-
-            if (data != null) {
-                try (OutputStream outputStream = connection.getOutputStream();
-                     OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
-                    writer.write(data);
-                }
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(new URL(request.getURL()).toURI())
+                    .method(request.getRequestType().name(), data == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(data))
+                    .header("X-API-Key", apiKey)
+                    .header("Content-Type", "application/json")
+                    .header("Content-Language", "en-US")
+                    .build();
+            HttpResponse<?> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            Object responseBody = response.body();
+            if (responseBody == null) {
+                throw new NullPointerException("Response body is null");
             }
-
-            try (InputStream inputStream = connection.getInputStream();
-                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-                String response = bufferedReader.lines().filter(str -> !str.isEmpty()).collect(Collectors.joining("\n"));
-                int statusCode = connection.getResponseCode();
-
-                T parsed = parseJson(response, request.getResponseClass());
-                return new RestResponse<>(statusCode, parsed);
+            if (!(responseBody instanceof String responseString)) {
+                throw new IllegalArgumentException("Response body is not a string but is instead a " + responseBody.getClass().getSimpleName());
             }
-        } finally {
-            if (connection != null)
-                connection.disconnect();
+            int statusCode = response.statusCode();
+            T parsed = parseJson(responseString, request.getResponseClass());
+            return new RestResponse<>(statusCode, parsed);
+        } catch (URISyntaxException | InterruptedException ex) {
+            ex.printStackTrace();
         }
+        return null;
     }
 
     private String toJson(Object data) throws JsonProcessingException {

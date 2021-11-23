@@ -6,7 +6,6 @@ import net.tcpshield.tcpshieldapi.impl.APIClientImpl;
 import net.tcpshield.tcpshieldapi.response.BackendSetPostResponse;
 import net.tcpshield.tcpshieldapi.response.DomainPostResponse;
 import net.tcpshield.tcpshieldapi.response.NetworkPostRepsonse;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,7 +1,6 @@
 package net.tcpshield.tcpshieldapi.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.Date;
 

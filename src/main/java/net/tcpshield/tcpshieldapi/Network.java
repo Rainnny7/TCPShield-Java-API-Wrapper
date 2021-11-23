@@ -1,7 +1,6 @@
 package net.tcpshield.tcpshieldapi;
 
 import java.util.Date;
-import java.util.List;
 
 public interface Network {
 

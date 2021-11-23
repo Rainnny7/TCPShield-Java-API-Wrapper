@@ -12,9 +12,6 @@ import net.tcpshield.tcpshieldapi.rest.RequestType;
 import net.tcpshield.tcpshieldapi.rest.RestClient;
 import net.tcpshield.tcpshieldapi.rest.RestRequest;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +22,6 @@ public class APIClientImpl implements APIClient {
     public APIClientImpl(String apiKey) {
         if (apiKey == null) throw new IllegalArgumentException("apiKey is null");
 
-        setupOverride();
         this.client = new RestClient(apiKey);
     }
 
@@ -249,31 +245,5 @@ public class APIClientImpl implements APIClient {
                 .requestType(RequestType.DELETE)
                 .build()
                 .execute(client);
-    }
-
-    /**
-     * Sets up overrides because the standard Java library does not allow {@code PATCH} requests
-     */
-    private void setupOverride() {
-        try {
-            Field methodsField = HttpURLConnection.class.getDeclaredField("methods");
-
-            Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(methodsField, methodsField.getModifiers() & ~Modifier.FINAL);
-
-            methodsField.setAccessible(true);
-
-
-            String[] oldMethods = (String[]) methodsField.get(null);
-            String[] newMethods = new String[oldMethods.length + 1];
-
-            System.arraycopy(oldMethods, 0, newMethods, 0, oldMethods.length);
-            newMethods[oldMethods.length] = "PATCH";
-
-            methodsField.set(null, newMethods);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        }
     }
 }

@@ -1,7 +1,6 @@
 package net.tcpshield.tcpshieldapi.impl;
 
 import net.tcpshield.tcpshieldapi.Domain;
-import net.tcpshield.tcpshieldapi.Network;
 import net.tcpshield.tcpshieldapi.response.DomainResponse;
 
 import java.util.Date;
